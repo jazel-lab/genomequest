@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GenomeQuest | DNA Structure & Packaging</title>
+<style>
+:root{--navy:#10233f;--blue:#2b78c5;--cyan:#48c6d8;--gold:#f3bd54;--ink:#18283d;--muted:#617187;--paper:#f3f7fb;--card:#fff;--line:#dce5ef}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 Inter,system-ui,Segoe UI,Arial,sans-serif}
+header{background:linear-gradient(120deg,#10233f,#174d79);color:white;padding:22px clamp(16px,4vw,48px);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.brand{font-weight:850;font-size:1.45rem;letter-spacing:.04em}.brand span{color:#62d5e2}.tag{color:#d6e7f7;font-size:.88rem}
+main{max-width:1200px;margin:auto;padding:24px 18px 48px}.intro{display:flex;justify-content:space-between;gap:18px;align-items:end;margin-bottom:18px;flex-wrap:wrap}
+h1{font-size:clamp(1.5rem,3vw,2.25rem);margin:0 0 5px;color:var(--navy)}h2{font-size:1.15rem;margin:0 0 12px;color:var(--navy)}p{margin:6px 0;color:var(--muted)}
+.pill{display:inline-block;background:#e2f5f7;color:#126575;padding:5px 10px;border-radius:20px;font-size:.78rem;font-weight:750}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.tabs button,.btn{border:0;border-radius:10px;padding:10px 14px;background:#e3ebf4;color:#24415f;font-weight:700;cursor:pointer}
+.tabs button.active,.btn.primary{background:var(--blue);color:white}.btn:hover,.tabs button:hover{filter:brightness(.96)}
+.layout{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(280px,.85fr);gap:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 6px 22px #18334d0a}
+.viewer{position:relative;background:radial-gradient(circle at 50% 42%,#244a70,#0d1b31 75%);border-radius:13px;overflow:hidden;min-height:430px}
+canvas{width:100%;height:430px;display:block;touch-action:pan-y}
+.viewer-label{position:absolute;left:14px;top:12px;color:#e8f6ff;font-size:.82rem;background:#071629aa;padding:6px 9px;border-radius:8px}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:15px}.control{background:#f5f8fb;border-radius:10px;padding:11px}.control label{display:flex;justify-content:space-between;font-size:.85rem;font-weight:700;color:#334a63}.control input{width:100%;accent-color:var(--blue);margin-top:9px}
+.info h3{margin:0 0 6px;color:var(--navy)}.info ul{padding-left:19px;color:#4f6278}.info li{margin:6px 0}
+.stat{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:8px 0;color:#52677e}.stat strong{color:var(--navy)}
+.callout{background:#fff7e7;border-left:4px solid var(--gold);padding:11px 13px;border-radius:8px;color:#73551d;font-size:.88rem;margin-top:12px}
+.progress{height:8px;background:#e6edf5;border-radius:8px;overflow:hidden}.progress div{height:100%;background:var(--cyan);width:0}
+.quizq{font-weight:750;color:var(--navy);margin:14px 0 9px}.option{display:block;width:100%;text-align:left;background:#f3f7fb;border:1px solid var(--line);padding:10px;border-radius:9px;margin:7px 0;cursor:pointer;color:#31465e}.option:hover{border-color:var(--blue)}.feedback{min-height:25px;font-weight:700;margin-top:8px}
+footer{text-align:center;color:#718197;font-size:.8rem;margin-top:24px}
+@media(max-width:800px){.layout{grid-template-columns:1fr}.viewer,canvas{min-height:350px;height:350px}.controls{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><div><div class="brand">🧬 GENOME<span>QUEST</span></div><div class="tag">An interactive journey through DNA structure and genome packaging</div></div><div class="pill">BIO 2 • CELL & MOLECULAR BIOLOGY</div></header>
+<main>
+<section class="intro"><div><h1>Explore how DNA is organized</h1><p>Rotate the model, adjust the packaging level, and investigate the molecular structures.</p></div><span class="pill">3D-style interactive model</span></section>
+<nav class="tabs" aria-label="Learning modules">
+<button class="active" data-tab="dna">1. DNA Structure</button><button data-tab="nucleosome">2. Nucleosome</button><button data-tab="chromatin">3. Chromatin</button><button data-tab="chromosome">4. Chromosome</button><button data-tab="quiz">Knowledge Check</button>
+</nav>
+<div class="layout">
+<section class="card">
+<div class="viewer"><canvas id="scene" aria-label="Interactive molecular illustration"></canvas><div class="viewer-label" id="sceneLabel">DNA double helix • rotate by dragging</div></div>
+<div class="controls" id="controls">
+<div class="control"><label for="zoom">Zoom <output id="zoomVal">1.0×</output></label><input id="zoom" type="range" min=".65" max="1.6" step=".05" value="1"></div>
+<div class="control"><label for="pack">Packaging level <output id="packVal">1 / 4</output></label><input id="pack" type="range" min="1" max="4" step="1" value="1"></div>
+</div>
+<div style="display:flex;gap:9px;margin-top:12px;flex-wrap:wrap"><button class="btn primary" id="reset">Reset view</button><button class="btn" id="toggle">Pause rotation</button></div>
+</section>
+<aside class="card info">
+<h2 id="infoTitle">DNA double helix</h2><p id="infoText">DNA is a polymer made of nucleotide subunits. Two antiparallel strands form a double helix.</p>
+<div id="details">
+<div class="stat"><span>Backbone</span><strong>Sugar + phosphate</strong></div><div class="stat"><span>Base pairs</span><strong>A–T and G–C</strong></div><div class="stat"><span>Strand direction</span><strong>Antiparallel</strong></div>
+</div>
+<div class="callout" id="tip">Explore: drag the model to rotate it. Use the packaging slider to compare levels of organization.</div>
+</aside>
+</div>
+<section class="card" id="quizPanel" style="margin-top:18px;display:none">
+<h2>Knowledge Check</h2><p>Choose the best answer. Immediate feedback is provided.</p>
+<div class="progress"><div id="quizProgress"></div></div><div id="quizContent"></div><div class="feedback" id="feedback" aria-live="polite"></div><button class="btn primary" id="next" style="display:none">Next question</button>
+</section>
+<footer>GenomeQuest • Educational model, not to scale • Use the guide sheet for lesson instructions</footer>
+</main>
+<script>
+const canvas=document.getElementById('scene'),ctx=canvas.getContext('2d');
+let rot=0,drag=false,lastX=0,paused=false,zoom=1,level=1,tab='dna';
+const $=id=>document.getElementById(id);
+const content={
+dna:{title:'DNA double helix',text:'DNA (deoxyribonucleic acid) stores hereditary information. Each nucleotide contains a deoxyribose sugar, phosphate group, and nitrogenous base. The two strands run in opposite directions.',rows:[['Backbone','Sugar + phosphate'],['Base pairs','A–T and G–C'],['Strand direction','Antiparallel']],tip:'Adenine pairs with thymine using two hydrogen bonds; guanine pairs with cytosine using three.'},
+nucleosome:{title:'Nucleosome: DNA around histones',text:'A nucleosome is the basic repeating unit of chromatin. About 147 base pairs of DNA wrap around a histone octamer, which contains two copies each of H2A, H2B, H3, and H4.',rows:[['DNA wrapped','About 147 base pairs'],['Protein core','Histone octamer'],['Linker DNA','Connects neighboring nucleosomes']],tip:'Think of DNA as thread and the histone octamer as a spool. This is a simplified model.'},
+chromatin:{title:'Chromatin: DNA–protein complex',text:'Chromatin consists mainly of DNA and associated proteins. Nucleosomes are connected by linker DNA and organized into dynamic, higher-order structures. Chromatin can be relatively open or more compact.',rows:[['Main components','DNA + proteins'],['Open state','Generally more accessible'],['Compact state','Generally less accessible']],tip:'Chromatin organization helps regulate access to genes; it is not one rigid, universal fiber.'},
+chromosome:{title:'Condensed chromosome',text:'During cell division, chromatin becomes highly organized and condensed. A replicated chromosome has two sister chromatids joined at a centromere; telomeres protect chromosome ends.',rows:[['Sister chromatids','Two copies after replication'],['Centromere','Region joining chromatids'],['Telomeres','Protect chromosome ends']],tip:'The familiar X shape represents a replicated chromosome during a particular stage of cell division.'}
+};
+function resize(){const r=canvas.getBoundingClientRect(),dpr=window.devicePixelRatio||1;canvas.width=r.width*dpr;canvas.height=r.height*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);draw()}
+function project(x,y,z,cx,cy,s){const perspective=3.6/(3.6+z*.008);return [cx+x*s*perspective,cy+y*s*perspective,z]}
+function line(a,b,color,w=2){ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.strokeStyle=color;ctx.lineWidth=w;ctx.stroke()}
+function sphere(x,y,r,color){const g=ctx.createRadialGradient(x-r*.35,y-r*.4,1,x,y,r);g.addColorStop(0,'#ffffff');g.addColorStop(.25,color);g.addColorStop(1,'#071629');ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill()}
+function draw(){
+ const w=canvas.clientWidth,h=canvas.clientHeight,cx=w/2,cy=h/2;ctx.clearRect(0,0,w,h);
+ const s=Math.min(w,h)*.0062*zoom;
+ const strands=tab==='dna'||tab==='quiz';
+ if(strands){
+  let prevA=null,prevB=null;
+  for(let i=0;i<=100;i++){let t=i/100*Math.PI*6+rot;let y=(i-50)*2.45;let x=Math.cos(t)*72,z=Math.sin(t)*72;
+   let a=project(x,y,z,cx,cy,s),b=project(-x,y,-z,cx,cy,s);
+   if(prevA){line(prevA,a,'#54d6e5',3);line(prevB,b,'#f3bd54',3)}
+   if(i%5===0)line(a,b,'#d7e8f6aa',1.3);
+   prevA=a;prevB=b;
+  }
+  for(let i=0;i<=100;i+=5){let t=i/100*Math.PI*6+rot,y=(i-50)*2.45,x=Math.cos(t)*72,z=Math.sin(t)*72;let a=project(x,y,z,cx,cy,s),b=project(-x,y,-z,cx,cy,s);sphere(a[0],a[1],3.2,'#45c5d9');sphere(b[0],b[1],3.2,'#efb94d')}
+  ctx.fillStyle='#eaf6ff';ctx.font='12px system-ui';ctx.fillText('Sugar-phosphate strands',12,h-18);
+ }else if(tab==='nucleosome'){
+  // DNA path coiled around histone core
+  const core=project(0,0,0,cx,cy,s);sphere(core[0],core[1],43*zoom,'#d98d62');
+  for(let j=0;j<2;j++){ctx.beginPath();for(let i=0;i<=260;i++){let t=i/260*Math.PI*5+rot+j*Math.PI;let x=Math.cos(t)*58,y=Math.sin(t)*42,z=Math.sin(t*2)*12;let p=project(x,y,z,cx,cy,s);if(i===0)ctx.moveTo(p[0],p[1]);else ctx.lineTo(p[0],p[1])}ctx.strokeStyle=j?'#f3bd54':'#4dd2e0';ctx.lineWidth=4;ctx.stroke()}
+  ctx.fillStyle='#fff';ctx.font='bold 13px system-ui';ctx.fillText('Histone core',cx-34,cy+4);
+ }else if(tab==='chromatin'){
+  for(let i=0;i<9;i++){let x=(i-4)*34,y=Math.sin(i*1.3+rot)*18;let p=project(x,y,Math.cos(i)*10,cx,cy,s);sphere(p[0],p[1],17*zoom,'#d98d62');if(i<8){let q=project(x+34,y,Math.cos(i+1)*10,cx,cy,s);line(p,q,'#52d2df',3)}}
+  ctx.fillStyle='#fff';ctx.font='12px system-ui';ctx.fillText('Nucleosomes connected by linker DNA',cx-112,cy+75);
+ }else{
+  // X-shaped replicated chromosome
+  ctx.lineCap='round';ctx.lineWidth=24*zoom;ctx.strokeStyle='#4ccddd';
+  ctx.beginPath();ctx.moveTo(cx-65*s*8,cy-105*s*8);ctx.lineTo(cx+65*s*8,cy+105*s*8);ctx.stroke();
+  ctx.strokeStyle='#f1b84d';ctx.beginPath();ctx.moveTo(cx+65*s*8,cy-105*s*8);ctx.lineTo(cx-65*s*8,cy+105*s*8);ctx.stroke();
+  sphere(cx,cy,10*zoom,'#f7e2a5');ctx.fillStyle='#fff';ctx.font='12px system-ui';ctx.fillText('Simplified replicated chromosome',cx-105,cy+125);
+ }
+}
+function setTab(t){tab=t;document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));$('quizPanel').style.display=t==='quiz'?'block':'none';$('controls').style.display=t==='quiz'?'none':'grid';$('sceneLabel').textContent=({dna:'DNA double helix • drag to rotate',nucleosome:'DNA wrapped around a histone core',chromatin:'Nucleosomes and linker DNA',chromosome:'Condensed replicated chromosome',quiz:'Review the structures'})[t];if(t!=='quiz'){let c=content[t];$('infoTitle').textContent=c.title;$('infoText').textContent=c.text;$('details').innerHTML=c.rows.map(r=>`<div class="stat"><span>${r[0]}</span><strong>${r[1]}</strong></div>`).join('');$('tip').textContent=c.tip}else{$('infoTitle').textContent='Check your understanding';$('infoText').textContent='Answer the questions to review the key concepts.';$('details').innerHTML='<div class="stat"><span>Questions</span><strong>5</strong></div><div class="stat"><span>Feedback</span><strong>Immediate</strong></div>';$('tip').textContent='Take your time and read each option carefully.';renderQ()}draw()}
+document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.tab)));
+canvas.addEventListener('pointerdown',e=>{drag=true;lastX=e.clientX;canvas.setPointerCapture(e.pointerId)});canvas.addEventListener('pointermove',e=>{if(drag){rot+=(e.clientX-lastX)*.012;lastX=e.clientX;draw()}});canvas.addEventListener('pointerup',()=>drag=false);canvas.addEventListener('pointercancel',()=>drag=false);
+$('zoom').addEventListener('input',e=>{zoom=+e.target.value;$('zoomVal').textContent=zoom.toFixed(2)+'×';draw()});
+$('pack').addEventListener('input',e=>{level=+e.target.value;$('packVal').textContent=level+' / 4';let map=['dna','nucleosome','chromatin','chromosome'];setTab(map[level-1])});
+$('reset').onclick=()=>{rot=0;zoom=1;$('zoom').value=1;$('zoomVal').textContent='1.00×';draw()};
+$('toggle').onclick=()=>{paused=!paused;$('toggle').textContent=paused?'Resume rotation':'Pause rotation'};
+const questions=[
+{q:'Which components form the DNA backbone?',a:['Nitrogenous bases only','Sugar and phosphate','Histone proteins','Amino acids'],c:1,e:'The backbone is made of alternating deoxyribose sugars and phosphate groups.'},
+{q:'Which base pairs with adenine in DNA?',a:['Guanine','Cytosine','Thymine','Uracil'],c:2,e:'In DNA, adenine pairs with thymine (A–T).'},
+{q:'What is the protein core of a nucleosome called?',a:['Ribosome','Histone octamer','Centromere','Nucleotide'],c:1,e:'A histone octamer contains two copies each of H2A, H2B, H3, and H4.'},
+{q:'What is chromatin mainly composed of?',a:['DNA and associated proteins','RNA and lipids','Only histones','Sugars and ATP'],c:0,e:'Chromatin is DNA associated with histones and other proteins.'},
+{q:'Which chromosome region helps protect its ends?',a:['Centromere','Telomere','Origin','Promoter'],c:1,e:'Telomeres are specialized structures at chromosome ends.'}
+];let qi=0,score=0,answered=false;
+function renderQ(){let q=questions[qi];$('quizProgress').style.width=(qi/questions.length*100)+'%';$('quizContent').innerHTML=`<div class="quizq">${qi+1}. ${q.q}</div>`+q.a.map((a,i)=>`<button class="option" data-i="${i}">${String.fromCharCode(65+i)}. ${a}</button>`).join('');$('feedback').textContent='';$('next').style.display='none';answered=false;document.querySelectorAll('.option').forEach(b=>b.onclick=()=>{if(answered)return;answered=true;let ok=+b.dataset.i===q.c;if(ok)score++;$('feedback').textContent=(ok?'Correct! ':'Not quite. ')+q.e;$('feedback').style.color=ok?'#16804b':'#a45b19';$('next').style.display='inline-block';$('next').textContent=qi===questions.length-1?'See results':'Next question'})}
+$('next').onclick=()=>{if(qi<questions.length-1){qi++;renderQ()}else{$('quizProgress').style.width='100%';$('quizContent').innerHTML=`<h3>Quiz complete!</h3><p>Your score: <strong>${score} / ${questions.length}</strong></p><p>${score>=4?'Excellent work!':'Review the modules and try again.'}</p>`;$('feedback').textContent='';$('next').textContent='Try again';$('next').onclick=()=>{qi=0;score=0;renderQ()}}};
+function animate(){if(!paused&&!drag&&tab!=='quiz'){rot+=.008;draw()}requestAnimationFrame(animate)}
+window.addEventListener('resize',resize);resize();animate();
+</script>
+</body></html>
